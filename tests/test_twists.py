@@ -40,6 +40,8 @@ class ScenarioTests(unittest.TestCase):
         self.assertEqual(a.frames[0]["exposed"], 3)
         self.assertEqual(a.frames[-1]["step"], 12)
         self.assertEqual(len(a.nodes), 40)
+        self.assertEqual(len(a.frames[0]["exposed_ids"]), 3)
+        self.assertEqual(len(a.frames[-1]["exposed_ids"]), a.frames[-1]["exposed"])
         self.assertTrue(all(u < v for u, v in a.links))
 
     def test_out_of_range_simulation_parameters_are_rejected(self):

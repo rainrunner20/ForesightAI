@@ -42,7 +42,7 @@ const claims = [
   }
 ];
 
-const state = { view: 'overview', claimIndex: 0, rumor: 55, factCheck: 40, grounding: true, selectedAgent: 10, run: 1, loadedReport: null, twistIndex: 0, replayStep: 0, reportClaimIndex: 0 };
+const state = { view: 'overview', claimIndex: 0, rumor: 55, factCheck: 40, grounding: true, selectedAgent: 10, run: 1, loadedReport: null, twistIndex: 0, replayStep: 0, reportClaimIndex: 0, networkFrame: 0 };
 const viewMeta = {
   overview: ['Overview', 'When rumors spread, does AI follow?', 'Explore how repeated misleading claims compete with evidence, and how grounded prompts may help models resist them.'],
   claims: ['Claim explorer', 'Investigate a claim, not just a headline.', 'Compare the claim, its labeled verdict, and the synthetic social context used for controlled testing.'],
@@ -133,6 +133,26 @@ function claimSpotlight() {
   </article>`;
 }
 function seeded(index) { const x = Math.sin(index * 89.173 + 4.718) * 43758.5453; return x - Math.floor(x); }
+function importedNetwork() {
+  const samples = state.loadedReport?.network_samples;
+  if (!samples || typeof samples !== 'object') return null;
+  const sample = Object.values(samples).find(value => Array.isArray(value?.nodes) && Array.isArray(value?.links) && Array.isArray(value?.frames));
+  return sample && sample.nodes.length <= 500 && sample.frames.length <= 51 ? sample : null;
+}
+function graphAgents() {
+  const imported=importedNetwork();
+  if (!imported) return agents();
+  const frame=imported.frames[clamp(state.networkFrame,0,imported.frames.length-1)] || {};
+  const reached=new Set(frame.exposed_ids || []);
+  const corrected=new Set(frame.corrected_ids || []);
+  return imported.nodes.map((node,i)=>{
+    const angle=i*137.508*Math.PI/180;
+    const radius=19 + Math.sqrt((i+1)/imported.nodes.length)*195;
+    const checker=Boolean(node.fact_checker), exposed=reached.has(node.id);
+    return {id:node.id+1,sourceId:node.id,x:clamp(250+Math.cos(angle)*radius,18,482),y:clamp(210+Math.sin(angle)*radius*.78,20,396),
+      checker,reached:exposed,status:checker?'Fact-checker':corrected.has(node.id)?'Corrected':exposed?'Exposed to rumor':'Unexposed'};
+  });
+}
 function agents() {
   return Array.from({length:74},(_,i)=>{
     const angle = (i*137.508)*Math.PI/180;
@@ -145,9 +165,16 @@ function agents() {
   });
 }
 function networkSvg(compact=false) {
-  const nodes=agents();
+  const nodes=graphAgents(), imported=importedNetwork();
   let edges='';
-  for(let i=2;i<nodes.length;i++){
+  if(imported){
+    const byId=new Map(nodes.map(n=>[n.sourceId,n]));
+    for(const pair of imported.links){
+      if(!Array.isArray(pair) || pair.length!==2) continue;
+      const a=byId.get(pair[0]), b=byId.get(pair[1]);
+      if(a&&b) edges+=`<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${a.reached?'#527c87':'#334258'}" stroke-opacity=".35" stroke-width=".9"/>`;
+    }
+  } else for(let i=2;i<nodes.length;i++){
     for(const parent of [Math.floor(i*.38),Math.floor(i*.69)]){
       const a=nodes[i], b=nodes[parent];
       edges+=`<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${a.reached?'#527c87':'#334258'}" stroke-opacity="${a.reached?'.35':'.22'}" stroke-width=".9"/>`;
@@ -158,13 +185,14 @@ function networkSvg(compact=false) {
     const fill=n.checker?'#61dfca':n.reached?'#f8aa78':'#70829b';
     return `<circle data-agent="${n.id}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${selected?7.4:n.checker?4.7:3.8}" fill="${fill}" stroke="${selected?'#f7fbff':'#0e1829'}" stroke-width="${selected?'2.4':'1.1'}" tabindex="0" role="button" aria-label="Select synthetic agent ${n.id}" style="cursor:pointer"/>`;
   }).join('');
-  return `<svg class="network-svg ${compact?'network-compact':''}" viewBox="0 0 500 420" role="group" aria-label="Clickable diagram of 74 fictional connected agents"><defs><radialGradient id="glow"><stop stop-color="#25516a" stop-opacity=".45"/><stop offset="1" stop-color="#102237" stop-opacity="0"/></radialGradient></defs><ellipse cx="250" cy="210" rx="239" ry="184" fill="url(#glow)"/>${edges}${circles}</svg>`;
+  return `<svg class="network-svg ${compact?'network-compact':''}" viewBox="0 0 500 420" role="group" aria-label="Clickable diagram of ${nodes.length} synthetic connected agents"><defs><radialGradient id="glow"><stop stop-color="#25516a" stop-opacity=".45"/><stop offset="1" stop-color="#102237" stop-opacity="0"/></radialGradient></defs><ellipse cx="250" cy="210" rx="239" ry="184" fill="url(#glow)"/>${edges}${circles}</svg>`;
 }
 function networkCard(compact=false) {
-  const m=values();
-  return `<article class="panel network-panel">${sectionHeading(compact?'Network activity':'Agent interaction map',compact?'74 fictional agents · stylized diffusion':'Click a node to inspect its generated state','<span class="tag tag-dim">SIMULATED</span>')}
+  const m=values(), graph=importedNetwork(), n=graphAgents();
+  return `<article class="panel network-panel">${sectionHeading(compact?'Network activity':'Agent interaction map',graph?`${n.length} seeded synthetic agents · imported from the Python runner`:(compact?'74 fictional agents · stylized diffusion':'Click a node to inspect its generated state'),'<span class="tag tag-dim">SIMULATED</span>')}
     ${networkSvg(compact)}<div class="network-legend"><span><i class="legend-dot aqua"></i> Fact-checker</span><span><i class="legend-dot peach"></i> Rumor-exposed</span><span><i class="legend-dot slate"></i> Not exposed</span></div>
-    ${compact?'':`<div class="agent-detail"><span class="agent-avatar">◉</span><div><strong>Agent #${String(state.selectedAgent).padStart(2,'0')}</strong><p>${agents()[state.selectedAgent-1]?.status || 'Not selected'} · Synthetic node</p></div><span class="agent-reach">${Math.round(m.spread)}% network exposure index</span></div>`}</article>`;
+    ${graph&&!compact?`<div class="simulation-controls"><span>Network timestep ${clamp(state.networkFrame,0,graph.frames.length-1)} / ${graph.frames.length-1}</span><button class="button button-secondary" data-frame-prev ${state.networkFrame===0?'disabled':''}>← Back</button><button class="button button-primary" data-frame-next ${state.networkFrame===graph.frames.length-1?'disabled':''}>Next →</button></div>`:''}
+    ${compact?'':`<div class="agent-detail"><span class="agent-avatar">◉</span><div><strong>Agent #${String(state.selectedAgent).padStart(2,'0')}</strong><p>${n.find(x=>x.id===state.selectedAgent)?.status || 'Not selected'} · Synthetic node</p></div><span class="agent-reach">${graph?Math.round(100*(graph.frames[clamp(state.networkFrame,0,graph.frames.length-1)]?.exposed||0)/graph.agent_count):Math.round(m.spread)}% network exposure index</span></div>`}</article>`;
 }
 function overview() {
   const m=values();
@@ -190,11 +218,12 @@ function claimExplorer() {
   </article><article class="panel">${sectionHeading('Evidence available', 'Inspect supporting and contradicting material')}${evidenceList()}<button class="text-link" data-view="evidence">View full evidence audit <span>→</span></button></article></div>`;
 }
 function diffusionLab() {
-  const m=values();
-  return `<div class="notice-bar"><div class="notice-icon">◎</div><div><strong>Simulation mode.</strong> Agents are generated deterministically for teaching. NetLogo integration is planned separately.</div><span>NOT OBSERVED DATA</span></div><div class="content-grid network-layout">
+  const m=values(), graph=importedNetwork(), frame=graph?.frames[clamp(state.networkFrame,0,graph.frames.length-1)];
+  const reach=frame?100*frame.exposed/graph.agent_count:m.spread;
+  return `<div class="notice-bar"><div class="notice-icon">◎</div><div><strong>Simulation mode.</strong> ${graph?'Showing actual seeded Python simulator output; agent behavior is still synthetic.':'Showing a stylized illustrative network. Import a JSON report to inspect the Python simulator output.'}</div><span>NOT OBSERVED DATA</span></div><div class="content-grid network-layout">
     ${networkCard(false)}<div class="stack-column">${controlsPanel()}
-    <article class="panel small-panel">${sectionHeading('Diffusion snapshot','Toy-model values recalculated as you adjust controls')}
-    <div class="snapshot-row"><span>Rumor exposure</span><strong>${pct(m.spread)}</strong></div><div class="bar-track"><div class="bar-fill peach" style="width:${m.spread}%"></div></div>
+    <article class="panel small-panel">${sectionHeading('Diffusion snapshot',graph?'Imported Python simulator frame':'Toy-model values recalculated as you adjust controls')}
+    <div class="snapshot-row"><span>Rumor exposure</span><strong>${pct(reach)}</strong></div><div class="bar-track"><div class="bar-fill peach" style="width:${reach}%"></div></div>
     <div class="snapshot-row space-top"><span>Misleading-context pressure</span><strong>${pct(m.misinformation)}</strong></div><div class="bar-track"><div class="bar-fill blue" style="width:${m.misinformation}%"></div></div>
     </article></div></div>`;
 }
@@ -292,7 +321,7 @@ function exportReport() {
   const response={warning:'SYNTHETIC UI DEMO — NOT A MEASURED LLM EXPERIMENT',generated_at:new Date().toISOString(),
     title:'ForesightAI dashboard illustration',case_id:claims[state.claimIndex].id,
     settings:{rumor_repetition_index:state.rumor,fact_checker_index:state.factCheck,evidence_first_mode:state.grounding},
-    toy_metrics:values(),condition_labels:['evidence_only','rumor_pressure','evidence_first'],
+    toy_metrics:values(),condition_labels:['evidence_only','rumor_pressure','evidence_first','fake_authority','rumor_mutation','echo_chamber','evidence_rescue'],
     note:'Use the Python runner for actual model output, not these deterministic UI formulas.'};
   const blob=new Blob([JSON.stringify(response,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='foresightai-synthetic-demo.json';a.click();URL.revokeObjectURL(url);
@@ -307,7 +336,9 @@ document.addEventListener('click',(event)=>{
   const twist=event.target.closest('[data-twist]');if(twist){state.twistIndex=Number(twist.dataset.twist);render();return;}
   const stop=event.target.closest('[data-replay-step]');if(stop){state.replayStep=Number(stop.dataset.replayStep);render();return;}
   if(event.target.closest('[data-replay-prev]')){state.replayStep=Math.max(0,state.replayStep-1);render();return;}
-  if(event.target.closest('[data-replay-next]')){state.replayStep+=1;render();}
+  if(event.target.closest('[data-replay-next]')){state.replayStep+=1;render();return;}
+  if(event.target.closest('[data-frame-prev]')){state.networkFrame=Math.max(0,state.networkFrame-1);render();return;}
+  if(event.target.closest('[data-frame-next]')){const g=importedNetwork();state.networkFrame=Math.min((g?.frames.length||1)-1,state.networkFrame+1);render();}
 });
 document.addEventListener('keydown',(event)=>{
   if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-agent]')){event.preventDefault();state.selectedAgent=Number(event.target.dataset.agent);render();}
@@ -318,7 +349,7 @@ $('#reportFile').addEventListener('change',async (event)=>{
   try {
     const report=JSON.parse(await file.text());
     if(!report || !report.metadata || !report.metrics || !Array.isArray(report.rows) || typeof report.metadata.model!=='string') throw Error('Invalid ForesightAI result format');
-    state.loadedReport=report;state.reportClaimIndex=0;state.replayStep=0;changeView('experiments');toast('Local experiment report imported.');
+    state.loadedReport=report;state.reportClaimIndex=0;state.replayStep=0;state.networkFrame=0;changeView('experiments');toast('Local experiment report imported.');
   } catch(error) {toast(`Could not import report: ${error.message}`);}
   event.target.value='';
 });
