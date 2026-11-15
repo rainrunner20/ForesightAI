@@ -1,0 +1,66 @@
+; ForesightAI — optional NetLogo teaching model.
+; Paste into a blank NetLogo model's Code tab, create buttons `setup` and `go`.
+; This is a separate proof-of-concept from the tested Python agent model.
+
+globals [agent-count checker-fraction base-share-rate rumor-reach checked-count]
+turtles-own [skepticism fact-checker? rumor-state next-share?]
+
+to setup
+  clear-all
+  set agent-count 120
+  set checker-fraction 0.15
+  set base-share-rate 0.42
+  create-turtles agent-count [
+    setxy random-xcor random-ycor
+    set skepticism random-float 1
+    set fact-checker? (random-float 1 < checker-fraction)
+    set rumor-state "unaware"
+    set next-share? false
+    set color gray
+    if fact-checker? [ set color turquoise ]
+  ]
+  ask turtles [
+    let contacts (min (list 3 (count other turtles)))
+    create-links-with (n-of contacts other turtles) [ set color gray - 2 ]
+  ]
+  ask (n-of 3 (turtles with [not fact-checker?])) [
+    set rumor-state "sharing"
+    set color orange
+  ]
+  update-metrics
+  reset-ticks
+end
+
+to go
+  if not any? turtles with [rumor-state = "sharing"] [ stop ]
+  ; Compute next-step exposures without allowing same-tick chain reactions.
+  ask turtles with [rumor-state = "sharing"] [
+    ask link-neighbors with [rumor-state = "unaware"] [
+      ifelse fact-checker? [
+        set rumor-state "checked"
+        set color turquoise
+      ] [
+        set rumor-state "exposed"
+        set color orange + 2
+        let checkers (count (link-neighbors with [fact-checker?]))
+        let resistance (min (list 0.9 (checkers * 0.2)))
+        if (random-float 1 < (base-share-rate * (1 - 0.75 * skepticism) * (1 - resistance))) [
+          set next-share? true
+        ]
+      ]
+    ]
+  ]
+  ask turtles with [rumor-state = "sharing"] [set rumor-state "exposed"]
+  ask turtles with [next-share?] [
+    set rumor-state "sharing"
+    set next-share? false
+    set color orange
+  ]
+  update-metrics
+  tick
+end
+
+to update-metrics
+  set rumor-reach (count turtles with [rumor-state != "unaware"])
+  set checked-count (count turtles with [rumor-state = "checked"])
+end
