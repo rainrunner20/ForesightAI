@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foresight-ai"
+version = "0.1.0"
+description = "Evidence-grounded LLM reliability experiments in noisy social information environments"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+foresight = "foresight_ai.cli:main"
+
+[tool.setuptools]
+packages = ["foresight_ai"]

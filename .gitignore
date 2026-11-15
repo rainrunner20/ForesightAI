@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+# Secrets and local output
+.env
+.env.*
+!.env.example
+outputs/
+# Data downloaded from third parties is not redistributed
+/data/averitec/
+/data/rumoureval/
+# Node / local editors
+node_modules/
+web/dist/
+.vscode/settings.json
+.DS_Store
+Thumbs.db

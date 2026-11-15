@@ -1,3 +1,152 @@
 # ForesightAI
 
-Research prototype. Project source is being imported in incremental commits.
+**How reliable are language models when a social discussion repeatedly contradicts the evidence?**
+
+ForesightAI is a CSC 733 Natural Language Processing research prototype. We test whether repeated misleading social messages change an LLM's claim-verification verdict, and whether an evidence-first prompt helps it stay grounded. We also built a browser-based research console to explain the experimental design and visualize a fictional social network.
+
+> **Status — prototype, not a fact-checking service.** The web dashboard defaults to fictional examples and deterministic toy scores. It does **not** display measured LLM accuracy until you import a model-generated report. The Python runner can perform actual local inference using Ollama. No trained classifier, live social-media ingestion, or NetLogo integration is claimed as complete.
+
+## Why this is interesting
+
+When an organization asks an AI assistant to summarize a fast-moving discussion, social consensus and trustworthy source evidence are not the same thing. A rumor repeated by many accounts can look persuasive even without independent verification. We study that failure mode with paired, reproducible test conditions.
+
+Our core question: **Do repeated misleading comments make an LLM more likely to change a correct verdict, and can evidence prioritization reduce that effect?**
+
+## What works right now
+
+| Component | Status | Notes |
+| --- | --- | --- |
+| Browser research dashboard | Working demo | Five interactive views, scenario sliders, SVG network, evidence inspector, JSON export |
+| AVeriTeC-style JSON/JSONL loader | Implemented | Converts real claim/evidence records without contacting outside sources |
+| Controlled context generation | Implemented | Evidence-only, rumor-pressure, evidence-first conditions |
+| Local Qwen/Ollama adapter | Implemented, not run here | Requires Ollama and a downloaded local model |
+| Paired evaluation and report export | Implemented | Verdict accuracy, answer changes, citation ID checks, malformed outputs |
+| Import results into dashboard | Implemented | Experiments page can load JSON emitted by Python runner |
+| Unit tests and CI workflow | Implemented | Standard-library Python tests and browser JS syntax validation |
+| RumourEval stance classifier / NetLogo ABM | Planned | Optional extensions after the central research experiment |
+
+## Quickstart: dashboard
+
+The dashboard has **no npm packages** and **no API keys**. From the project root:
+
+```powershell
+python -m http.server 5173 --directory web
+```
+
+Open `http://localhost:5173`. You can also open `web/index.html` directly in many browsers.
+
+Inside the UI:
+
+1. Change rumor repetition and fact-checker presence.
+2. Switch between Overview, Claim Explorer, Diffusion Lab, Evidence Audit, and Experiments.
+3. Click an agent on the network map to inspect it.
+4. Export a **synthetic** JSON configuration. This does not contain measured experiment results.
+
+## Quickstart: research runner
+
+The Python core uses the standard library, so no installation is needed for the demo.
+
+```powershell
+python -m unittest discover -s tests -v
+python -m foresight_ai.cli --provider mock --output outputs/demo.json
+```
+
+The mock backend only validates the pipeline; its deliberately fixed answers **cannot** be cited as scientific results.
+
+### Local Qwen experiment (optional)
+
+Install [Ollama](https://ollama.com/), then fetch a Qwen model in a terminal:
+
+```powershell
+ollama pull qwen3:4b
+```
+
+Run the experiment from the project root (Ollama must be running):
+
+```powershell
+python -m foresight_ai.cli --provider ollama --model qwen3:4b --input data/demo_claims.json --limit 3 --posts 16 --output outputs/qwen-demo.json
+```
+
+These examples use **fictional claims**, even though a real local model generated the verdicts. For research on annotated claims, replace `--input` with your local copy of the AVeriTeC training or development JSON file. The runner accepts the official AVeriTeC `questions[].answers[]` structure.
+
+To see your local results in the browser, open **Experiments → Import results JSON** and select `outputs/qwen-demo.json`. The dashboard's other toy illustrations stay clearly labeled synthetic.
+
+### Real dataset sources
+
+- **[AVeriTeC](https://fever.ai/dataset/averitec.html):** 4,568 real-world fact-checked claims, with verdict labels and annotated question-answer evidence. Start with a small, stratified subset. Dataset released under CC BY-NC 4.0; check usage terms and provide attribution.
+- **[RumourEval 2019](https://github.com/kippfreud/RumourEval):** Twitter/Reddit discussion threads with support/deny/query/comment stance labels and rumor verification annotations. Ideal for a later stance module. Follow the dataset and platform-specific terms.
+
+**We do not bundle the external research datasets in this repository.** The files in `data/` are entirely fabricated examples.
+
+## Research design
+
+Each annotated claim goes through the same three conditions:
+
+| Condition | Controlled input | Purpose |
+| --- | --- | --- |
+| A — Evidence only | Claim + cited evidence | Baseline model verdict |
+| B — Rumor pressure | Claim + same evidence + repeated misleading comments | Detect evidence-to-social influence |
+| C — Evidence first | Same claim/evidence/comments, with evidence explicitly prioritized | Test a grounded prompting safeguard |
+
+Our initial Python runner holds the claim and evidence constant but varies context and instruction placement. **A proper report also needs controls for context length, prompt ordering, label balance, random seed, and repeated model trials.** Those stronger ablations are described in [docs/RESEARCH_PLAN.md](docs/RESEARCH_PLAN.md) and are not yet implemented.
+
+Current computed metrics:
+
+- **Verdict accuracy** against dataset labels.
+- **Answer flip rate** relative to the evidence-only condition.
+- **Citation ID validity** (whether an output references supplied evidence IDs); this is *not* proof that a citation supports the conclusion.
+- **Malformed answer rate**, so parse failures are visible rather than silently discarded.
+
+We plan source-support verification, uncertainty calibration, and confidence intervals before submitting results.
+
+## Project map
+
+```text
+foresight-ai/
+├── .github/workflows/ci.yml       # Checks for genuine contributions
+├── data/demo_claims.json          # Fictional test fixture only
+├── docs/                          # Research, architecture, team workflow
+├── foresight_ai/                  # Python experiment engine
+│   ├── cli.py                     # Command-line entry point
+│   ├── dataset.py                 # Claim and evidence loading
+│   ├── experiment.py              # Paired experiment runner
+│   ├── metrics.py                 # Aggregation and evaluation
+│   ├── prompts.py                 # Evidence and social prompt design
+│   ├── providers.py               # Mock and local Ollama adapters
+│   └── scenarios.py               # Controlled misleading-post generation
+├── tests/                         # Standard-library regression tests
+├── web/                           # Browser-native interactive dashboard
+│   ├── app.js
+│   ├── index.html
+│   └── styles.css
+├── CONTRIBUTING.md
+└── pyproject.toml
+```
+
+## Team Git workflow
+
+We keep `main` stable and work through feature branches. Every PR should explain **what changed, why, how it was tested, and any limitations**. Use small meaningful commits that reflect real work; we do not fabricate commit histories or claim tests were run when they were not. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+A clean local workflow in VS Code PowerShell:
+
+```powershell
+git switch main
+git pull --ff-only
+git switch -c feature/stance-baseline
+# Develop and actually test a small change.
+git add foresight_ai tests
+git commit -m "feat(nlp): add baseline stance classifier"
+git push -u origin feature/stance-baseline
+```
+
+Open a PR on GitHub and request teammate review. Prefer squash merge if the branch has noisy fixup commits; do **not** delete feature branches after merging if the team wants them retained.
+
+## Course alignment
+
+The central experiment uses classification, text representation, evidence retrieval/attribution, language modeling, transformer-based LLM inference, prompt design, and precision/recall/F1 evaluation. Future comparison models may include TF-IDF + logistic regression, a BiLSTM, and an encoder-only Transformer for stance classification. The optional NetLogo simulator would **feed** controlled social contexts into the NLP experiment; it should not replace the research question.
+
+## Limitations and integrity
+
+The dashboard demo is deterministic. Its numerical "reliability" curves are **not** outcomes from Qwen, GPT, or any other LLM. The mock backend uses a fixed verdict for plumbing checks, so its apparent accuracy is meaningless. Real-world claims can be ambiguous or change over time; evidence provenance and dates must be assessed before making judgments. We do not claim this tool predicts future events or determines objective truth from social-media popularity.
+
+*Developed as an educational research project for CSC 733. See `docs/RESEARCH_PLAN.md` for planned hypotheses and evaluation controls.*

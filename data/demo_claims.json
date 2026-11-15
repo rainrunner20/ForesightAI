@@ -1,0 +1,27 @@
+[
+  {
+    "id": "DEMO-001",
+    "claim": "HarborLink's fictional ferry service will permanently stop operating next month.",
+    "label": "Refuted",
+    "questions": [{"question": "What has the operator announced?", "answers": [
+      {"answer": "The fictional operator announced a weekend maintenance closure and a normal schedule afterward.", "source_url": ""},
+      {"answer": "The fictional service plans to resume operations on Monday morning.", "source_url": ""}
+    ]}]
+  },
+  {
+    "id": "DEMO-002",
+    "claim": "The fictional Townline library added Sunday opening hours.",
+    "label": "Supported",
+    "questions": [{"question": "What are the hours?", "answers": [
+      {"answer": "The made-up library's published schedule shows Sunday hours from 12:00 to 16:00.", "source_url": ""}
+    ]}]
+  },
+  {
+    "id": "DEMO-003",
+    "claim": "A fictional city will replace every school bus with autonomous vehicles next year.",
+    "label": "Not Enough Evidence",
+    "questions": [{"question": "Has funding been approved?", "answers": [
+      {"answer": "No budget decision is provided in the synthetic briefing.", "source_url": ""}
+    ]}]
+  }
+]

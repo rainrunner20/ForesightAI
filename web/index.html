@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09111e" />
+    <meta name="description" content="ForesightAI research dashboard: testing evidence-grounded AI under social misinformation pressure." />
+    <title>ForesightAI — Reliability Lab</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar" aria-label="Application navigation">
+        <a class="brand" href="#overview" aria-label="ForesightAI home">
+          <div class="brand-mark"><span class="brand-mark-inner">◈</span></div>
+          <div><strong>FORESIGHT<span>AI</span></strong><small>RELIABILITY LAB / V0.1</small></div>
+        </a>
+        <div class="navigation-label">WORKSPACE</div>
+        <nav class="navigation" aria-label="Views">
+          <button data-view="overview" class="nav-link active"><span class="nav-icon">◫</span>Overview <span class="nav-shortcut">01</span></button>
+          <button data-view="claims" class="nav-link"><span class="nav-icon">⌕</span>Claim explorer <span class="nav-shortcut">02</span></button>
+          <button data-view="network" class="nav-link"><span class="nav-icon">⟡</span>Diffusion lab <span class="nav-shortcut">03</span></button>
+          <button data-view="evidence" class="nav-link"><span class="nav-icon">▤</span>Evidence audit <span class="nav-shortcut">04</span></button>
+          <button data-view="experiments" class="nav-link"><span class="nav-icon">▦</span>Experiments <span class="nav-shortcut">05</span></button>
+        </nav>
+        <div class="sidebar-separator"></div>
+        <div class="navigation-label">MODEL STACK</div>
+        <div class="status-lines">
+          <div class="status-line"><span class="status-dot teal"></span><span>Experiment engine</span><span class="status-label">Ready</span></div>
+          <div class="status-line"><span class="status-dot orange"></span><span>Qwen inference</span><span class="status-label">Offline</span></div>
+          <div class="status-line"><span class="status-dot pale"></span><span>Network simulator</span><span class="status-label">Demo</span></div>
+        </div>
+        <div class="sidebar-bottom">
+          <div class="sidebar-bottom-icon">i</div>
+          <p><strong>About this build</strong><span>This interface uses fictional claims and illustrative calculations. No measured model results are shown.</span></p>
+        </div>
+      </aside>
+      <main class="workspace">
+        <header class="topbar">
+          <div class="breadcrumb">Research workspace <span>/</span> <strong id="breadcrumbCurrent">Overview</strong></div>
+          <div class="topbar-actions">
+            <span class="demo-pill"><span class="pulse"></span> SYNTHETIC DEMO</span>
+            <button class="button button-quiet" id="resetButton" title="Reset all controls">↻ <span>Reset</span></button>
+          </div>
+        </header>
+        <div class="content-frame">
+          <section class="page-head">
+            <div><div class="eyebrow"><span class="mini-spark">✦</span> CSC 733 · NATURAL LANGUAGE PROCESSING</div><h1 id="pageTitle">When rumors spread, does AI follow?</h1><p id="pageDescription">Explore how repeated misleading claims compete with evidence, and how grounded prompts may help models resist them.</p></div>
+            <button class="button button-primary" id="exportButton"><span>⇩</span> Export demo JSON</button>
+          </section>
+          <div id="viewContent" aria-live="polite"></div>
+          <footer><span>FORESIGHTAI / RESEARCH PROTOTYPE</span><span>All dashboard values are synthetic illustrations · Not a deployed fact-checking service</span></footer>
+        </div>
+      </main>
+    </div>
+    <input id="reportFile" type="file" accept=".json,application/json" hidden aria-label="Import a ForesightAI experiment report" />
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
