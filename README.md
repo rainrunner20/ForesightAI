@@ -104,11 +104,16 @@ Current computed metrics:
 
 We plan source-support verification, uncertainty calibration, and confidence intervals before submitting results. **See [docs/TWISTS.md](docs/TWISTS.md)** for experimental extensions, hypotheses, and confounds, and [simulations/README.md](simulations/README.md) for the optional NetLogo source.
 
+## Publish the interactive dashboard
+
+The repo contains a manual GitHub Pages workflow for the static `web/` console. See [docs/DEPLOY.md](docs/DEPLOY.md). The repository owner must select **GitHub Actions** under Settings → Pages and manually dispatch the workflow once; no live site is claimed until deployment succeeds.
+
 ## Project map
 
 ```text
 foresight-ai/
-├── .github/workflows/ci.yml       # Checks for genuine contributions
+├── .github/workflows/ci.yml       # Tests on pull requests
+├── .github/workflows/deploy-pages.yml # Optional manual Pages deployment
 ├── data/demo_claims.json          # Fictional test fixture only
 ├── docs/                          # Research plan and five extensions
 ├── foresight_ai/                  # Python experiment engine
@@ -127,6 +132,7 @@ foresight-ai/
 │   ├── index.html
 │   └── styles.css
 ├── CONTRIBUTING.md
+├── SECURITY.md
 └── pyproject.toml
 ```
 
