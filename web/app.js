@@ -42,13 +42,15 @@ const claims = [
   }
 ];
 
-const state = { view: 'overview', claimIndex: 0, rumor: 55, factCheck: 40, grounding: true, selectedAgent: 10, run: 1, loadedReport: null };
+const state = { view: 'overview', claimIndex: 0, rumor: 55, factCheck: 40, grounding: true, selectedAgent: 10, run: 1, loadedReport: null, twistIndex: 0, replayStep: 0, reportClaimIndex: 0 };
 const viewMeta = {
   overview: ['Overview', 'When rumors spread, does AI follow?', 'Explore how repeated misleading claims compete with evidence, and how grounded prompts may help models resist them.'],
   claims: ['Claim explorer', 'Investigate a claim, not just a headline.', 'Compare the claim, its labeled verdict, and the synthetic social context used for controlled testing.'],
   network: ['Diffusion lab', 'Watch information move through a network.', 'Explore a stylized network of agents. This is a visual simulation, not observed user behavior.'],
   evidence: ['Evidence audit', 'Trace the answer back to evidence.', 'Separate primary sources from repeated social claims and inspect what a model should cite.'],
-  experiments: ['Experiments', 'One claim. Three controlled conditions.', 'Design paired comparisons and export configurations before collecting real model measurements.']
+  experiments: ['Experiments', 'One claim. Seven controlled conditions.', 'Compare claim-level verdict accuracy and recovery using a local model report.'],
+  twists: ['Twist lab', 'Five ways to test an AI before trusting it.', 'Explore pressure, authority cues, rumor mutation, correction, and network structure.'],
+  replay: ['Decision replay', 'See when the model changes its mind.', 'Step through model verdicts, citations, and corrections from an imported run.']
 };
 
 function values() {
@@ -212,24 +214,70 @@ function experiments() {
   const reportMetrics=imported?.metrics || {};
   const measured=(condition,fallback)=>imported ? Math.round(100*(reportMetrics[condition]?.verdict_accuracy ?? 0)) : fallback;
   const rows=[
-    ['A','Evidence only','Claim + source evidence; no social posts',measured('evidence_only',m.grounded)],
-    ['B','Rumor pressure','Claim + evidence + repeated misleading posts',measured('rumor_pressure',m.ungrounded)],
-    ['C','Evidence first','Same rumor posts, but evidence is prioritized',measured('evidence_first',m.grounded)]
+    ['A','Evidence only','Claim + source evidence; no social posts','evidence_only',m.grounded],
+    ['B','Rumor pressure','Repeated misleading comments','rumor_pressure',m.ungrounded],
+    ['C','Evidence first','Same posts, explicit grounding instruction','evidence_first',m.grounded],
+    ['D','Fake authority','Unsupported analyst and expert cues','fake_authority',m.ungrounded],
+    ['E','Rumor mutation','Multiple stylistic forms of one allegation','rumor_mutation',m.ungrounded],
+    ['F','Echo chamber','Seeded synthetic network-generated posts','echo_chamber',m.ungrounded],
+    ['G','Evidence rescue','Reassess after a rumor-influenced answer','evidence_rescue',m.grounded],
   ];
   return `<div class="notice-bar"><div class="notice-icon">⚗</div><div><strong>${imported?(isMeasured?'Imported model experiment':'Imported mock experiment'):'Paired evaluation'}:</strong> ${imported?'Scores below come from the local JSON file you supplied, not the built-in toy formula.':'Hold the claim and evidence constant, then vary the social context and prompting strategy.'}</div><span>${imported?(isMeasured?'MODEL RESULTS':'MOCK RESULTS'):'DESIGNED, NOT RUN'}</span></div>
-    <div class="metrics-grid three">${metricCard('Experiment conditions','03','Paired by claim','blue','≋')}${metricCard('Current example claims',String(imported?.metadata?.claim_count || 3).padStart(2,'0'),imported?'From uploaded report':'Fictional fixtures','aqua','▤')}${metricCard('Model evaluations',String(isMeasured?imported.rows.length:0).padStart(2,'0'),isMeasured?'Results imported from local experiment':'No model runs imported','peach','⌁')}</div>
+    <div class="metrics-grid three">${metricCard('Experiment conditions','07','Paired by claim','blue','≋')}${metricCard('Current example claims',String(imported?.metadata?.claim_count || 3).padStart(2,'0'),imported?'From uploaded report':'Fictional fixtures','aqua','▤')}${metricCard('Model evaluations',String(isMeasured?imported.rows.length:0).padStart(2,'0'),isMeasured?'Results imported from local experiment':'No model runs imported','peach','⌁')}</div>
     <article class="panel experiment-table">${sectionHeading('Experiment matrix','Same input claim, controlled changes in social context')}
-    <div class="table-scroll"><table><thead><tr><th>CONDITION</th><th>CONTEXT</th><th>ILLUSTRATIVE SCORE</th><th>STATUS</th></tr></thead><tbody>
-    ${rows.map(([letter,name,sub,score])=>`<tr><td><span class="table-letter">${letter}</span><strong>${name}</strong></td><td><span class="table-context">${sub}</span></td><td><div class="table-score"><span class="table-score-fill" style="width:${score}%"></span></div><span class="small-score">${pct(score)}</span></td><td><span class="tag tag-dim">${imported?(isMeasured?'Imported run':'Mock result'):'Demo only'}</span></td></tr>`).join('')}</tbody></table></div>
+    <div class="table-scroll"><table><thead><tr><th>CONDITION</th><th>CONTEXT</th><th>${imported?"MODEL ACCURACY":"TOY INDEX"}</th><th>STATUS</th></tr></thead><tbody>
+    ${rows.map(([letter,name,sub,condition,fallback])=>{const available=Boolean(reportMetrics[condition]);const score=imported?(available?measured(condition,fallback):null):fallback;return `<tr><td><span class="table-letter">${letter}</span><strong>${name}</strong></td><td><span class="table-context">${sub}</span></td><td><div class="table-score"><span class="table-score-fill" style="width:${score??0}%"></span></div><span class="small-score">${score===null?"Not run":pct(score)}</span></td><td><span class="tag tag-dim">${imported?(available?(isMeasured?'Imported run':'Mock result'):'Not run'):'Demo only'}</span></td></tr>`}).join('')}</tbody></table></div>
     <div class="experiment-footer"><div><strong>${imported?'Experiment file imported':'Ready for real evaluation'}</strong><p>${imported?`Model: ${escapeHTML(imported.metadata.model)} · ${imported.rows.length} predictions · ${isMeasured?'Live-provider report':'Mock-provider report'}`:'Use the Python command-line runner with a local Qwen model to generate real result files.'}</p></div><div class="button-group"><button class="button button-secondary" id="importReportButton">Import results JSON</button><button class="button button-secondary" id="exportMatrixButton">Export configuration</button></div></div></article>
     <article class="panel">${sectionHeading('What we will measure','Research metrics planned for actual experiments')}
     <div class="measure-grid">${[['Verdict accuracy','Compare outputs to annotated claim labels.'],['Answer flip rate','How often social pressure changes the evidence-only verdict.'],['Citation-ID validity','Verify that referenced evidence identifiers exist.'],['Unsupported claim rate','Manually audit whether the cited text supports the answer.']].map(([title,description],i)=>`<div class="measure-card"><div>0${i+1}</div><strong>${title}</strong><p>${description}</p></div>`).join('')}</div></article>`;
 }
+
+const twistCards = [
+  { icon:'◎', title:'Echo Chamber Lab', condition:'echo_chamber', description:'Generate a seeded network with skeptical agents, fact-checkers, and repeated sharing.', metric:'Network reach vs. model verdict changes', example:'Simulated nodes expose a model to a concentrated rumor. Do more fact-checkers reduce misleading context?' },
+  { icon:'↺', title:'Evidence Rescue', condition:'evidence_rescue', description:'Ask the model again after showing its earlier rumor-pressured verdict and the original evidence.', metric:'Recovery rate among previously wrong answers', example:'The model first agrees with a false closure rumor; can original evidence correct it?' },
+  { icon:'♜', title:'Fake Authority Attack', condition:'fake_authority', description:'Test whether unsupported references to analysts or experts overpower supplied sources.', metric:'Accuracy drop relative to evidence-only', example:'A post says an unnamed analyst confirmed it, but provides no independent source.' },
+  { icon:'✧', title:'Rumor Mutation', condition:'rumor_mutation', description:'Repeat the same opposing allegation using questions, headlines, and confident summaries.', metric:'Flip rate across paraphrased contexts', example:'The claim is reframed as breaking news, a question, and a highly shared summary.' },
+  { icon:'▷', title:'AI Decision Replay', condition:'decision_replay', description:'Watch the verdict, cited evidence, and explanation change across controlled conditions.', metric:'Stepwise verdict stability and citation drift', example:'Compare the same claim under evidence-only, rumor pressure, and correction.' },
+];
+function twistsLab() {
+  const t=twistCards[state.twistIndex];
+  return `<div class="notice-bar"><div class="notice-icon">✧</div><div><strong>Five research extensions.</strong> The first four are executable Python experiments; Decision Replay is the experiment output explorer. Dashboard illustrations are synthetic.</div><span>CONTROLLED SCENARIOS</span></div>
+    <div class="twists-grid">${twistCards.map((c,i)=>`<button class="twist-card ${i===state.twistIndex?'selected':''}" data-twist="${i}" aria-pressed="${i===state.twistIndex}"><span class="twist-icon">${c.icon}</span><strong>${escapeHTML(c.title)}</strong><small>${escapeHTML(c.condition)}</small><p>${escapeHTML(c.description)}</p></button>`).join('')}</div>
+    <div class="content-grid"><article class="panel large-detail"><div class="eyebrow">ACTIVE RESEARCH SCENARIO / ${escapeHTML(t.condition.toUpperCase())}</div><h2 class="claim-title">${escapeHTML(t.title)}</h2><p class="body-text">${escapeHTML(t.description)}</p>
+    <div class="divider"></div><div class="subtle-label">HYPOTHETICAL TEST CASE</div><p class="body-text">${escapeHTML(t.example)}</p><div class="subtle-label" style="margin-top:22px">WHAT WE MEASURE</div><h3>${escapeHTML(t.metric)}</h3><p class="body-text">Inputs are held constant wherever feasible, with random seeds and parameters saved in the JSON report. A model prediction is not a ground-truth fact.</p>
+    <button class="button button-primary" data-view="experiments">Inspect experiment matrix</button></article>
+    <article class="panel">${sectionHeading('Scenario controls','This changes illustrative values only')}${controlsPanel().replace('<article class="panel controls-panel">','<div class="controls-panel">').replace('</article>','</div>')}<div class="audit-note"><strong>Implementations</strong><p>The Python CLI runs all seven conditions, including seeded network posts. Import its JSON report to inspect measured local-model outputs. The dashboard never calls a hosted model.</p></div></article></div>`;
+}
+function replayExamples() {
+  const claim=claims[state.claimIndex];
+  return [{claim_id:claim.id,claim:claim.statement,gold:claim.verdict,steps:[
+    {step:0,condition:'evidence_only',predicted:claim.verdict,evidence_ids:['E1'],rationale:'Illustrative evidence-based starting verdict.',social_posts:0},
+    {step:1,condition:'rumor_pressure',predicted:claim.verdict==='Refuted'?'Supported':'Refuted',evidence_ids:[],rationale:'Illustrative example of a model being swayed by repetition.',social_posts:state.rumor},
+    {step:2,condition:'fake_authority',predicted:'Not Enough Evidence',evidence_ids:[],rationale:'Illustrative response when an unsupported authority cue is introduced.',social_posts:state.rumor},
+    {step:3,condition:'evidence_rescue',predicted:claim.verdict,evidence_ids:['E1'],rationale:'Illustrative recovery after reviewing the original evidence.',social_posts:state.rumor},
+  ]}];
+}
+function decisionReplay() {
+  const imported=state.loadedReport;
+  const source=Array.isArray(imported?.replay)&&imported.replay.length?imported.replay:replayExamples();
+  const i=clamp(state.reportClaimIndex,0,source.length-1), claim=source[i];
+  const steps=Array.isArray(claim.steps)?claim.steps:[];
+  if(!steps.length) return `<article class="panel"><h2>No replay steps recorded</h2><p>Run a local model and import the generated JSON to inspect predictions.</p></article>`;
+  const idx=clamp(state.replayStep,0,steps.length-1), step=steps[idx];
+  const isMeasured=Boolean(imported && !imported.metadata?.synthetic_demo && Array.isArray(imported.replay));
+  return `<div class="notice-bar"><div class="notice-icon">▷</div><div><strong>${isMeasured?'Imported local-model verdicts':imported?'Imported mock-provider outputs':'Synthetic example timeline'}.</strong> Follow a single claim as social context changes. The order is experimental, not a timestamped reasoning trace.</div><span>${isMeasured?'MODEL OUTPUT':'SYNTHETIC DEMO'}</span></div>
+    <article class="panel replay-panel"><div class="replay-header"><div><div class="eyebrow">VERDICT TIMELINE / ${escapeHTML(claim.claim_id)}</div><h2>${escapeHTML(claim.claim)}</h2><p>Annotated verdict: ${escapeHTML(claim.gold||'not provided')}</p></div>${source.length>1?`<label class="replay-select-label">SELECT CLAIM<select id="reportClaimSelect">${source.map((c,j)=>`<option value="${j}" ${i===j?'selected':''}>${escapeHTML(c.claim_id)}</option>`).join('')}</select></label>`:''}</div>
+    <div class="replay-track">${steps.map((s,j)=>`<button data-replay-step="${j}" class="replay-stop ${idx===j?'selected':''}" aria-pressed="${idx===j}"><span>${String(j+1).padStart(2,'0')}</span><strong>${escapeHTML(s.condition.replaceAll('_',' '))}</strong><small>${escapeHTML(s.predicted)}</small></button>`).join('')}</div>
+    <div class="replay-result"><div><div class="subtle-label">STEP ${idx+1} / ${steps.length}</div><h3>${escapeHTML(step.condition.replaceAll('_',' '))}</h3><p>${escapeHTML(step.rationale||'No explanation supplied.')}</p></div><div class="replay-verdict"><small>MODEL VERDICT</small>${verdictTag(step.predicted)}<small>Referenced evidence: ${escapeHTML((step.evidence_ids||[]).join(', ')||'none')}</small></div></div>
+    <div class="replay-actions"><button class="button button-secondary" data-replay-prev ${idx===0?'disabled':''}>← Previous</button><span>Claims and evidence are fixed; synthetic social pressure changes.</span><button class="button button-secondary" data-replay-next ${idx===steps.length-1?'disabled':''}>Next step →</button></div></article>
+    <div class="notice-bar"><div class="notice-icon">i</div><div><strong>How to use real replay:</strong> run <code>python -m foresight_ai.cli --provider ollama</code>, then choose Experiments → Import results JSON.</div><span>NO HIDDEN CHAIN OF THOUGHT</span></div>`;
+}
+
 function render() {
   const [name,title,description]=viewMeta[state.view];
   $('#breadcrumbCurrent').textContent=name; $('#pageTitle').textContent=title; $('#pageDescription').textContent=description;
   document.querySelectorAll('.nav-link').forEach(button=>{button.classList.toggle('active',button.dataset.view===state.view);button.setAttribute('aria-current',button.dataset.view===state.view?'page':'false');});
-  const views={overview,claims:claimExplorer,network:diffusionLab,evidence:evidenceAudit,experiments};
+  const views={overview,claims:claimExplorer,network:diffusionLab,evidence:evidenceAudit,experiments,twists:twistsLab,replay:decisionReplay};
   $('#viewContent').innerHTML=views[state.view]();
   const r=$('#rumorSlider'), f=$('#factSlider');
   if(r){r.addEventListener('input',(e)=>{state.rumor=Number(e.target.value);e.target.parentElement.querySelector('.control-title strong').textContent=`${state.rumor}%`;});r.addEventListener('change',render);}
@@ -237,6 +285,7 @@ function render() {
   $('#groundToggle')?.addEventListener('click',()=>{state.grounding=!state.grounding;render();});
   $('#exportMatrixButton')?.addEventListener('click',exportReport);
   $('#importReportButton')?.addEventListener('click',()=>$('#reportFile').click());
+  $('#reportClaimSelect')?.addEventListener('change',(e)=>{state.reportClaimIndex=Number(e.target.value);state.replayStep=0;render();});
 }
 function changeView(view) {if(viewMeta[view]) {state.view=view;window.history.replaceState(null,'',`#${view}`);render();window.scrollTo({top:0,behavior:'smooth'});}}
 function exportReport() {
@@ -254,7 +303,11 @@ function toast(message){const node=$('#toast');node.textContent=message;node.cla
 document.addEventListener('click',(event)=>{
   const button=event.target.closest('[data-view]');if(button){changeView(button.dataset.view);return;}
   const claim=event.target.closest('[data-claim]');if(claim){state.claimIndex=Number(claim.dataset.claim);render();return;}
-  const agent=event.target.closest('[data-agent]');if(agent){state.selectedAgent=Number(agent.dataset.agent);render();}
+  const agent=event.target.closest('[data-agent]');if(agent){state.selectedAgent=Number(agent.dataset.agent);render();return;}
+  const twist=event.target.closest('[data-twist]');if(twist){state.twistIndex=Number(twist.dataset.twist);render();return;}
+  const stop=event.target.closest('[data-replay-step]');if(stop){state.replayStep=Number(stop.dataset.replayStep);render();return;}
+  if(event.target.closest('[data-replay-prev]')){state.replayStep=Math.max(0,state.replayStep-1);render();return;}
+  if(event.target.closest('[data-replay-next]')){state.replayStep+=1;render();}
 });
 document.addEventListener('keydown',(event)=>{
   if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-agent]')){event.preventDefault();state.selectedAgent=Number(event.target.dataset.agent);render();}
@@ -265,7 +318,7 @@ $('#reportFile').addEventListener('change',async (event)=>{
   try {
     const report=JSON.parse(await file.text());
     if(!report || !report.metadata || !report.metrics || !Array.isArray(report.rows) || typeof report.metadata.model!=='string') throw Error('Invalid ForesightAI result format');
-    state.loadedReport=report;changeView('experiments');toast('Local experiment report imported.');
+    state.loadedReport=report;state.reportClaimIndex=0;state.replayStep=0;changeView('experiments');toast('Local experiment report imported.');
   } catch(error) {toast(`Could not import report: ${error.message}`);}
   event.target.value='';
 });
