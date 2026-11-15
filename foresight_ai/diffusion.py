@@ -72,7 +72,10 @@ def simulate_network(*, seed: int = 733, agent_count: int = 120,
     for step in range(steps + 1):
         frames.append({"step": step, "exposed": len(exposed),
                        "sharing": len(spreaders), "fact_checkers": len(checkers),
-                       "corrected": len(corrected)})
+                       "corrected": len(corrected),
+                       "exposed_ids": sorted(exposed),
+                       "sharing_ids": sorted(spreaders),
+                       "corrected_ids": sorted(corrected)})
         if step == steps:
             break
         next_spreaders = set()
