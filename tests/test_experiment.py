@@ -17,10 +17,12 @@ class ExperimentTests(unittest.TestCase):
 
     def test_paired_conditions(self):
         report = run_experiment([self.case], MockProvider(), 4)
-        self.assertEqual(len(report["rows"]), 3)
+        self.assertEqual(len(report["rows"]), 7)
         self.assertEqual(report["metadata"]["synthetic_demo"], True)
         self.assertEqual(report["metrics"]["evidence_only"]["samples"], 1)
         self.assertEqual(report["rows"][0]["social_posts"], 0)
+        self.assertEqual(len(report["replay"][0]["steps"]), 7)
+        self.assertIn(self.case.id, report["network_samples"])
 
     def test_invalid_model_verdict(self):
         self.assertEqual(parse_prediction({"verdict": "Definitely"})["verdict"], "INVALID")
