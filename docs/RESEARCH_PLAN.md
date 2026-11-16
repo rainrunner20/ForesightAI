@@ -34,12 +34,12 @@ H1 is a hypothesis, not a promised result; the effect may be zero or contrary to
 
 Core matrix: claim × condition × repetition level; compare paired samples. Freeze model and sampling settings. Record prompt version, model tag, decoding parameters, dataset split, and whether source evidence was present. If using sampling >0, repeat with distinct seeds and report variability.
 
-**Important:** The shipped v0.1 runner supports a subset of this design (three conditions and adjustable repeated posts). It does not yet implement token-matched filler, randomization, repeated trials, or confidence intervals. Those are tracked as follow-on work, not presented as completed.
+**Important:** The current runner supports seven conditions and adjustable repeated posts. It does not yet implement token-matched filler, randomized order, repeated model trials, or confidence intervals. Those are tracked as follow-on work, not presented as completed.
 
 ## Main metrics
 
 1. **Verdict accuracy** compared to AVeriTeC labels. Also use macro-F1 and per-label precision/recall for class imbalance in later evaluations.
-2. **Flip rate** relative to a paired evidence-only prediction, reported alongside *harmful flip rate* (correct → incorrect) and *helpful flip rate* (incorrect → correct).
+2. **Flip rate** relative to a paired evidence-only prediction, reported alongside *harmful flip rate* (correct → incorrect) and *helpful flip rate* (incorrect → correct). The implemented rates use the same denominator: claims with a valid prediction in both the evidence-only baseline and compared condition. Invalid or missing responses are excluded from paired flip rates but included in the separate invalid-output metric. A flip between two incorrect verdicts contributes to overall flip rate, but not harmful or helpful flip rate.
 3. **Cited-evidence ID validity**, plus **citation coverage**. A valid ID is not enough: conduct a separate evidence-entailment or human audit for actual support.
 4. **Abstention quality** when gold evidence is insufficient.
 5. **Calibration**: only if a defensible confidence estimator is added; text that sounds confident is not a probability.
