@@ -82,6 +82,18 @@ and exact McNemar p-values. These are exploratory and **not valid real-model
 results when using the mock provider**. For methodology and current research
 papers, read [docs/RECENT_RESEARCH_2026.md](docs/RECENT_RESEARCH_2026.md).
 
+### Model-output traceability (new)
+
+Real model runs now record a SHA-256 fingerprint of the exact **system and
+user prompt text** for each claim/condition, plus the local Ollama sampling
+temperature. If Ollama returns a model answer that is not a JSON object,
+the runner counts an `INVALID` prediction and saves a bounded excerpt
+instead of silently dropping the case or terminating the full study.
+
+This is a reproducibility aid, **not** a saved full prompt or model
+checkpoint digest. Network failures still stop the experiment rather
+than being mislabeled as a model-quality error.
+
 ### Human evidence-support review (new)
 
 A valid citation ID is not proof that the cited evidence actually justifies

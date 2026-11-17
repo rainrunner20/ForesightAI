@@ -45,7 +45,7 @@ Core matrix: claim × condition × repetition level; compare paired samples. Fre
 5. **Calibration**: only if a defensible confidence estimator is added; text that sounds confident is not a probability.
 6. **Intervals and significance**: implemented claim-paired percentile bootstrap 95% intervals and exact McNemar two-sided p-values on paired correctness. Results are exploratory and uncorrected for multiple comparisons; they do not model run-to-run sampling variance. For primary inferential claims, pre-register one comparison and sample real predictions.
 
-The output should include the complete per-claim responses, not just aggregate scores, so errors can be inspected.
+The output preserves per-claim verdicts, citations, rationales, prompt SHA-256 fingerprints, a fixed Ollama decoding temperature, and bounded excerpts for malformed JSON. It does **not** yet store entire raw prompts, remote checkpoint digests, or run-to-run trial IDs; complete reproducibility still requires the original dataset and code revision. A model-format failure counts as INVALID, while a network/transport failure aborts rather than masquerading as a model prediction.
 
 ## Baseline comparisons
 
