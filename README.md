@@ -156,6 +156,11 @@ foresight-ai/
 │   ├── metrics.py                 # Aggregation and evaluation
 │   ├── prompts.py                 # Evidence and social prompt design
 │   ├── providers.py               # Mock and local Ollama adapters
+│   ├── stance_data.py               # Validated stance data splits
+│   ├── stance_models.py             # TF-IDF and classifier metrics
+│   ├── stance_bert.py               # Optional BERT fine-tuning
+│   ├── stance_cli.py                # Stance training entry point
+│   ├── token_controls.py            # Optional prompt token auditing
 │   ├── scenarios.py               # Controlled misleading-post generation
 │   └── diffusion.py               # Seeded synthetic social network
 ├── simulations/                   # Optional NetLogo teaching model (.nls)
