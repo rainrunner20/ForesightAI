@@ -103,6 +103,29 @@ Run `python -m foresight_ai.stance_cli --help` and see
 [docs/STANCE_CLASSIFICATION.md](docs/STANCE_CLASSIFICATION.md) for split
 validation, optional installs, local training commands, and score definitions.
 
+### Official AVeriTeC real-data pilot
+
+A reproducible sampling command can download the **official** AVeriTeC
+training split (explicit opt-in), produce a 50-case binary-verdict pilot
+with 25 Supported + 25 Refuted cases, and save dataset SHA-256 plus
+selected case IDs locally. This is **data preparation**, not a completed
+LLM run:
+
+```powershell
+python -m foresight_ai.prepare_averitec --split train --download --per-label 25 --seed 733
+```
+
+The loader now keeps each answer with its original fact-checking **question**,
+source URL, and optional Boolean explanation. This prevents ambiguous
+standalone answers such as "No" from losing their meaning. Unanswerable
+answers are excluded, and the official `Cherrypicking` label variant is
+recognized. Synthetic misleading posts still need manual review before
+scientific conclusions.
+
+See [docs/REAL_DATA_AND_KAGGLE.md](docs/REAL_DATA_AND_KAGGLE.md)
+for benchmark provenance, sample-selection limitations, and our Kaggle
+competition assessment.
+
 ### Real dataset sources
 
 - **[AVeriTeC](https://fever.ai/dataset/averitec.html):** 4,568 real-world fact-checked claims, with verdict labels and annotated question-answer evidence. Start with a small, stratified subset. Dataset released under CC BY-NC 4.0; check usage terms and provide attribution.
