@@ -74,6 +74,14 @@ measured AI performance. The count excludes Ollama's chat template and may not
 exactly match a quantized local model. See [docs/TOKEN_CONTROLS.md](docs/TOKEN_CONTROLS.md).
 
 
+### Research uncertainty (new)
+
+Each Python report now includes `paired_inference`: paired accuracy
+differences, harmful/helpful flips, claim-level 95% bootstrap intervals,
+and exact McNemar p-values. These are exploratory and **not valid real-model
+results when using the mock provider**. For methodology and current research
+papers, read [docs/RECENT_RESEARCH_2026.md](docs/RECENT_RESEARCH_2026.md).
+
 ### Local Qwen experiment (optional)
 
 Install [Ollama](https://ollama.com/), then fetch a Qwen model in a terminal:
@@ -158,7 +166,7 @@ Current computed metrics:
 - **Evidence-rescue rate** conditional on the previous rumor-pressure verdict being wrong.
 - **Simulation reach** from a seeded synthetic agent model; this is not an empirical human-behavior measure.
 
-We plan source-support verification, uncertainty calibration, and confidence intervals before submitting results. **See [docs/TWISTS.md](docs/TWISTS.md)** for experimental extensions, hypotheses, and confounds, and [simulations/README.md](simulations/README.md) for the optional NetLogo source.
+Claim-paired percentile bootstrap 95% intervals and exact McNemar exploratory comparisons are implemented; real research intervals have **not** been computed because no real-model results were run here. We still need human source-support verification, repeated-model trials, and defensible uncertainty calibration. **See [docs/TWISTS.md](docs/TWISTS.md)** for experimental extensions, hypotheses, and confounds, and [simulations/README.md](simulations/README.md) for the optional NetLogo source.
 
 ## Publish the interactive dashboard
 

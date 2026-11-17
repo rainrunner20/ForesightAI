@@ -5,6 +5,7 @@ from typing import Any
 
 from .dataset import Claim
 from .metrics import summarize
+from .statistics import paired_inference
 from .prompts import SYSTEM, make_prompt
 from .providers import ModelProvider, parse_prediction
 from .scenarios import CONDITIONS, make_scenario
@@ -113,6 +114,7 @@ def run_experiment(claims: list[Claim], provider: ModelProvider, post_count: int
             "neutral_length_tolerance_tokens": 1 if token_counter else None,
         },
         "metrics": summarize(rows),
+        "paired_inference": paired_inference(rows, seed=seed),
         "rows": rows, "replay": replay, "network_samples": network_samples,
     }
 

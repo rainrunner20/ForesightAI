@@ -34,7 +34,7 @@ H1 is a hypothesis, not a promised result; the effect may be zero or contrary to
 
 Core matrix: claim × condition × repetition level; compare paired samples. Freeze model and sampling settings. Record prompt version, model tag, decoding parameters, dataset split, and whether source evidence was present. If using sampling >0, repeat with distinct seeds and report variability.
 
-**Important:** The current runner supports seven default conditions and an *optional* neutral context-length control with tokenizer-aware auditing of concatenated system/user text. This does not count the Ollama chat template and does not yet control every position effect. Randomized order, repeated model trials, and confidence intervals are not yet implemented. See [TOKEN_CONTROLS.md](TOKEN_CONTROLS.md).
+**Important:** The current runner supports seven default conditions and an *optional* neutral context-length control with tokenizer-aware auditing of concatenated system/user text. This does not count the Ollama chat template and does not yet control every position effect. Randomized order and repeated model trials are not yet implemented. Claim-paired confidence intervals are now calculated, but no real-model intervals have been generated. See [TOKEN_CONTROLS.md](TOKEN_CONTROLS.md).
 
 ## Main metrics
 
@@ -43,7 +43,7 @@ Core matrix: claim × condition × repetition level; compare paired samples. Fre
 3. **Cited-evidence ID validity**, plus **citation coverage**. A valid ID is not enough: conduct a separate evidence-entailment or human audit for actual support.
 4. **Abstention quality** when gold evidence is insufficient.
 5. **Calibration**: only if a defensible confidence estimator is added; text that sounds confident is not a probability.
-6. **Intervals and significance**: claim-level bootstrap intervals; for paired binary correctness, consider McNemar's test with suitable assumptions.
+6. **Intervals and significance**: implemented claim-paired percentile bootstrap 95% intervals and exact McNemar two-sided p-values on paired correctness. Results are exploratory and uncorrected for multiple comparisons; they do not model run-to-run sampling variance. For primary inferential claims, pre-register one comparison and sample real predictions.
 
 The output should include the complete per-claim responses, not just aggregate scores, so errors can be inspected.
 
