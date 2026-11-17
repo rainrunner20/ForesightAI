@@ -1,5 +1,6 @@
 """Run paired claim trials with transparent prompt and result accounting."""
 from pathlib import Path
+import hashlib
 import json
 from typing import Any
 
@@ -65,8 +66,17 @@ def run_experiment(claims: list[Claim], provider: ModelProvider, post_count: int
             prompt_tokens = (
                 token_count(SYSTEM, prompt, token_counter) if token_counter else None
             )
+            # Preserve a stable fingerprint of the exact system + user text.
+            # No hidden chat-template tokens or source corpus are embedded.
+            prompt_sha256 = hashlib.sha256(
+                (SYSTEM + "\\n\\n" + prompt).encode("utf-8")
+            ).hexdigest()
             raw = provider.predict(SYSTEM, prompt)
             response = parse_prediction(raw)
+            invalid_excerpt = (
+                str(raw.get("_raw_text") or json.dumps(raw, ensure_ascii=False))[:4000]
+                if response["verdict"] == "INVALID" else None
+            )
             if condition == "rumor_pressure":
                 prior_rumor_verdict = response["verdict"]
             row = {
@@ -81,6 +91,8 @@ def run_experiment(claims: list[Claim], provider: ModelProvider, post_count: int
                 ),
                 "step": len(steps),
                 "prompt_tokens": prompt_tokens,
+                "prompt_sha256": prompt_sha256,
+                "invalid_response_excerpt": invalid_excerpt,
                 "neutral_target_tokens": target_tokens,
                 "token_gap_vs_rumor": (
                     prompt_tokens - target_tokens
@@ -109,6 +121,8 @@ def run_experiment(claims: list[Claim], provider: ModelProvider, post_count: int
             "agent_count": agents, "fact_checker_ratio": fact_checker_ratio,
             "social_posts_per_condition": post_count,
             "conditions": list(ordered),
+            "inference_temperature": getattr(provider, "temperature", None),
+            "prompt_fingerprint_method": "sha256(system_newline_newline_user)",
             "tokenizer": tokenizer_name,
             "token_count_scope": "system_plus_user_text_without_chat_template",
             "neutral_length_tolerance_tokens": 1 if token_counter else None,
