@@ -82,6 +82,28 @@ and exact McNemar p-values. These are exploratory and **not valid real-model
 results when using the mock provider**. For methodology and current research
 papers, read [docs/RECENT_RESEARCH_2026.md](docs/RECENT_RESEARCH_2026.md).
 
+### Human evidence-support review (new)
+
+A valid citation ID is not proof that the cited evidence actually justifies
+the model's factual verdict. Export a source-aware review sheet from an
+experiment report and the original claim file:
+
+```powershell
+python -m foresight_ai.evidence_audit --report outputs/averitec-qwen.json --claims data/averitec/pilot_train.json --export outputs/evidence_review.csv
+```
+
+The exported CSV intentionally omits gold labels and leaves human
+`support_label` entries blank. After a reviewer fills the evidence-support
+labels, summarize them with:
+
+```powershell
+python -m foresight_ai.evidence_audit --report outputs/averitec-qwen.json --review outputs/evidence_review.csv --summary outputs/evidence_audit.json
+```
+
+This is **not** an automated source-entailment metric. It is a traceable
+manual audit; no real evidence reviews have been performed here.
+See [docs/EVIDENCE_AUDIT.md](docs/EVIDENCE_AUDIT.md).
+
 ### Local Qwen experiment (optional)
 
 Install [Ollama](https://ollama.com/), then fetch a Qwen model in a terminal:
