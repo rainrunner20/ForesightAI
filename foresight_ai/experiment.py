@@ -69,7 +69,7 @@ def run_experiment(claims: list[Claim], provider: ModelProvider, post_count: int
             # Preserve a stable fingerprint of the exact system + user text.
             # No hidden chat-template tokens or source corpus are embedded.
             prompt_sha256 = hashlib.sha256(
-                (SYSTEM + "\\n\\n" + prompt).encode("utf-8")
+                (SYSTEM + "\n\n" + prompt).encode("utf-8")
             ).hexdigest()
             raw = provider.predict(SYSTEM, prompt)
             response = parse_prediction(raw)
