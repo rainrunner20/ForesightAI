@@ -24,12 +24,13 @@ class OllamaProvider:
         if not url.startswith(("http://localhost:", "http://127.0.0.1:")):
             raise ValueError("For safety, Ollama endpoint must be on localhost")
         self.model, self.url, self.timeout = model, url, timeout
+        self.temperature = 0.1
 
     def predict(self, system: str, prompt: str) -> dict:
         body = json.dumps({"model": self.model, "stream": False, "format": "json",
                            "messages": [{"role": "system", "content": system},
                                         {"role": "user", "content": prompt}],
-                           "options": {"temperature": 0.1}}).encode("utf-8")
+                           "options": {"temperature": self.temperature}}).encode("utf-8")
         request = Request(self.url, body, {"Content-Type": "application/json"}, method="POST")
         try:
             with urlopen(request, timeout=self.timeout) as response:
@@ -39,10 +40,17 @@ class OllamaProvider:
         content = response_json.get("message", {}).get("content", "")
         try:
             result = json.loads(content)
-        except (ValueError, TypeError) as exc:
-            raise ValueError(f"Model response is not JSON: {str(content)[:120]!r}") from exc
+        except (ValueError, TypeError):
+            # A malformed *model answer* is an evaluation failure, not an
+            # infrastructure outage. Record it so it contributes to the
+            # invalid-output metric rather than dropping the whole run.
+            return {"verdict": "INVALID", "evidence_ids": [],
+                    "rationale": "Model answer was not valid JSON.",
+                    "_raw_text": str(content)[:4000]}
         if not isinstance(result, dict):
-            raise ValueError("Model response must be a JSON object")
+            return {"verdict": "INVALID", "evidence_ids": [],
+                    "rationale": "Model answer JSON was not an object.",
+                    "_raw_text": str(content)[:4000]}
         return result
 
 
