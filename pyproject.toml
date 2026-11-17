@@ -17,6 +17,8 @@ bert = ["scikit-learn>=1.4,<2", "joblib>=1.3", "transformers>=4.51,<5", "torch>=
 [project.scripts]
 foresight = "foresight_ai.cli:main"
 foresight-stance = "foresight_ai.stance_cli:main"
+foresight-averitec = "foresight_ai.prepare_averitec:main"
+foresight-audit = "foresight_ai.evidence_audit:main"
 
 [tool.setuptools]
 packages = ["foresight_ai"]
