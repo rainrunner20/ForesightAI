@@ -34,7 +34,7 @@ H1 is a hypothesis, not a promised result; the effect may be zero or contrary to
 
 Core matrix: claim × condition × repetition level; compare paired samples. Freeze model and sampling settings. Record prompt version, model tag, decoding parameters, dataset split, and whether source evidence was present. If using sampling >0, repeat with distinct seeds and report variability.
 
-**Important:** The current runner supports seven conditions and adjustable repeated posts. It does not yet implement token-matched filler, randomized order, repeated model trials, or confidence intervals. Those are tracked as follow-on work, not presented as completed.
+**Important:** The current runner supports seven default conditions and an *optional* neutral context-length control with tokenizer-aware auditing of concatenated system/user text. This does not count the Ollama chat template and does not yet control every position effect. Randomized order, repeated model trials, and confidence intervals are not yet implemented. See [TOKEN_CONTROLS.md](TOKEN_CONTROLS.md).
 
 ## Main metrics
 

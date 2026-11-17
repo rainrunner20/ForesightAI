@@ -56,6 +56,23 @@ python -m foresight_ai.cli --provider mock --seed 733 --agents 120 --posts 16 --
 
 The mock backend only validates the pipeline; its deliberately fixed answers **cannot** be cited as scientific results.
 
+### Token-length audit and neutral control (optional)
+
+The original seven conditions remain the default. A separate `neutral_length_control`
+can match the rumor prompt's **system + user text** token length within one token
+using an explicitly selected Hugging Face tokenizer. This helps check whether
+a result is due to repetition or just the length of the prompt.
+
+```powershell
+python -m pip install -e ".[tokenization]"
+python -m foresight_ai.cli --provider mock --posts 4 --conditions evidence_only,rumor_pressure,neutral_length_control --tokenizer Qwen/Qwen3-4B --allow-tokenizer-download --output outputs/neutral-demo.json
+```
+
+The tokenizer is optional and this example is **still a mock demo**, not
+measured AI performance. The count excludes Ollama's chat template and may not
+exactly match a quantized local model. See [docs/TOKEN_CONTROLS.md](docs/TOKEN_CONTROLS.md).
+
+
 ### Local Qwen experiment (optional)
 
 Install [Ollama](https://ollama.com/), then fetch a Qwen model in a terminal:
