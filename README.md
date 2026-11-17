@@ -25,7 +25,8 @@ Our core question: **Do repeated misleading comments make an LLM more likely to 
 | Unit tests and CI workflow | Implemented | Standard-library Python tests and browser JS syntax validation |
 | Echo-chamber simulation | Implemented in Python | Seeded, uncalibrated agent network with per-step frames and generated social posts |
 | NetLogo teaching model | Source included, unverified | Optional `.nls` example that must be tested in NetLogo; not an integrated empirical model |
-| RumourEval stance classifier | Planned | Extension after verified claim-evaluation baselines |
+| RumourEval TF-IDF baseline | Code implemented, untrained here | Optional scikit-learn training/evaluation on supplied data |
+| BERT stance classifier | Code implemented, untrained here | Optional Hugging Face encoder fine-tuning on supplied data |
 
 ## Quickstart: dashboard
 
@@ -91,6 +92,17 @@ These examples use **fictional claims**, even though a real local model generate
 
 To see your local results in the browser, open **Experiments → Import results JSON** and select `outputs/qwen-demo.json`. The dashboard's other toy illustrations stay clearly labeled synthetic.
 
+### Stance classification: TF-IDF and BERT (optional)
+
+A separate pipeline accepts RumourEval-style source/reply CSV, JSON or JSONL
+splits and trains either a TF-IDF + Logistic Regression baseline or a
+fine-tuned BERT encoder. The original dataset is not bundled, and **no real
+stance model has yet been trained or evaluated here**.
+
+Run `python -m foresight_ai.stance_cli --help` and see
+[docs/STANCE_CLASSIFICATION.md](docs/STANCE_CLASSIFICATION.md) for split
+validation, optional installs, local training commands, and score definitions.
+
 ### Real dataset sources
 
 - **[AVeriTeC](https://fever.ai/dataset/averitec.html):** 4,568 real-world fact-checked claims, with verdict labels and annotated question-answer evidence. Start with a small, stratified subset. Dataset released under CC BY-NC 4.0; check usage terms and provide attribution.
@@ -108,12 +120,16 @@ Each annotated claim runs through seven conditions by default. The first three f
 | B — Rumor pressure | Claim + same evidence + repeated misleading comments | Detect evidence-to-social influence |
 | C — Evidence first | Same claim/evidence/comments, with evidence explicitly prioritized | Test a grounded prompting safeguard |
 
-Our runner holds each claim and supplied evidence constant but varies social context, framing, and instruction placement. It also provides `fake_authority`, `rumor_mutation`, `echo_chamber`, and `evidence_rescue` conditions. The rescue step explicitly includes the prior verdict in a new independent prompt; it is not a multi-turn chat trace. **A proper report also needs controls for context length, prompt ordering, label balance, random seed, and repeated model trials.** Those stronger ablations are described in [docs/RESEARCH_PLAN.md](docs/RESEARCH_PLAN.md) and are not yet implemented.
+Our runner holds each claim and supplied evidence constant but varies social context, framing, and instruction placement. It also provides `fake_authority`, `rumor_mutation`, `echo_chamber`, and `evidence_rescue` conditions. The rescue step explicitly includes the prior verdict in a new independent prompt; it is not a multi-turn chat trace. **A proper report also needs controls for context length, prompt ordering, label balance, random seed, and repeated model trials.** Some controls have now been implemented (an opt-in tokenizer-aware neutral
+length comparison), while randomized ordering, repeated model trials,
+confidence intervals, and source-support audits remain planned. See
+[docs/RESEARCH_PLAN.md](docs/RESEARCH_PLAN.md) and
+[docs/TOKEN_CONTROLS.md](docs/TOKEN_CONTROLS.md).
 
 Current computed metrics:
 
 - **Verdict accuracy** against dataset labels.
-- **Answer flip rate** relative to the evidence-only condition.
+- **Answer flip rate**, **harmful flip rate**, and **helpful flip rate** relative to valid evidence-only decisions.
 - **Citation ID validity** (whether an output references supplied evidence IDs); this is *not* proof that a citation supports the conclusion.
 - **Malformed answer rate**, so parse failures are visible rather than silently discarded.
 - **Evidence-rescue rate** conditional on the previous rumor-pressure verdict being wrong.
@@ -173,7 +189,10 @@ Open a PR on GitHub and request teammate review. Prefer squash merge if the bran
 
 ## Course alignment
 
-The central experiment uses classification, text representation, evidence retrieval/attribution, language modeling, transformer-based LLM inference, prompt design, and precision/recall/F1 evaluation. Future comparison models may include TF-IDF + logistic regression, a BiLSTM, and an encoder-only Transformer for stance classification. A tested Python agent model feeds controlled synthetic social contexts into the NLP experiment. A separate NetLogo source example illustrates comparable mechanisms, but has not yet been executed or integrated. The ABM does not replace the NLP research question.
+The central experiment uses classification, text representation, evidence retrieval/attribution, language modeling, transformer-based LLM inference, prompt design, and precision/recall/F1 evaluation. The repository now includes untrained TF-IDF + logistic regression and BERT
+fine-tuning pipelines for stance classification. A BiLSTM remains a possible
+future comparison. These stance models do not replace the evidence-based
+claim-verification experiment. A tested Python agent model feeds controlled synthetic social contexts into the NLP experiment. A separate NetLogo source example illustrates comparable mechanisms, but has not yet been executed or integrated. The ABM does not replace the NLP research question.
 
 ## Limitations and integrity
 
