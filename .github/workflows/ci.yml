@@ -19,3 +19,17 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check web/app.js
+
+  stance-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install optional lightweight stance dependencies
+        run: python -m pip install -e ".[stance]"
+      - name: Train TF-IDF on fabricated unit-test fixtures
+        run: python -m unittest discover -s tests -p 'test_stance_models.py' -v
+      - name: Compile optional BERT runner without downloading weights
+        run: python -m compileall -q foresight_ai

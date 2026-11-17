@@ -50,8 +50,8 @@ The output should include the complete per-claim responses, not just aggregate s
 ## Baseline comparisons
 
 - Majority-class and simple rule-based verdict priors (clearly labeled weak baselines).
-- TF-IDF + logistic regression for *stance classification* in RumourEval, **not** a direct evidence-verification baseline for AVeriTeC.
-- BiLSTM and BERT-like encoder models for stance, if time and computing resources allow.
+- TF-IDF + logistic regression for *stance classification* in RumourEval, **not** a direct evidence-verification baseline for AVeriTeC. Training code and CI smoke tests now exist, but no real dataset result is reported.
+- Fine-tunable BERT encoder code for the same stance task now exists, but downloading and training a real checkpoint requires separate compute. A BiLSTM is still optional and not implemented.
 - One local instruction-following Qwen model for central evidence/repetition experiments, with and without explicit evidence-first prompting.
 
 ## Strong optional extensions
