@@ -1,8 +1,8 @@
-# ForesightAI | Colab Narrative Stress Test
+# ForesightAI | Colab practice test
 
-This is an **isolated teaching pilot** for the project's updated question: can a dominant social explanation cause an LLM to commit prematurely when the facts are incomplete?
+This notebook is a **practice test that shows how our experiment works** for the project's updated question: can a dominant social explanation cause an LLM to commit prematurely when the facts are incomplete?
 
-[Open the notebook in Google Colab](https://colab.research.google.com/github/rainrunner20/ForesightAI/blob/feature/colab-narrative-pilot/notebooks/ForesightAI_Narrative_Stress_Test.ipynb)
+[Open the notebook in Google Colab](https://colab.research.google.com/github/rainrunner20/ForesightAI/blob/feature/colab-narrative-pilot/notebooks/ForesightAI_Practice_Test.ipynb)
 
 ## Five-minute walkthrough
 
