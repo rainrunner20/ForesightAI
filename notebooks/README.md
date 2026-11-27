@@ -2,17 +2,16 @@
 
 [Open the official notebook in Google Colab](https://colab.research.google.com/github/rainrunner20/ForesightAI/blob/feature/colab-narrative-pilot/notebooks/ForesightAI_Research_Lab_V2.ipynb)
 
-This is the single authoritative notebook for CSC 733. It contains the original paper figures, plain-language explanations, controlled experiments, animated prompt analysis, live Qwen response trace, and measured-result charts.
+[Complete illustrated research companion](../docs/Research_Companion.md)
 
-## How to use it
+The notebook is the single executable research lab; the companion contains the detailed notes and all 21 saved visual assets.
 
-- Read the visual walkthrough and paper connections first.
-- Run Appendix A for setup. Keep `RUN_QWEN=False` for input previews.
-- For the live demo, enable `RUN_QWEN=True` and keep `RUN_BATCH=False`; use Appendix B.
-- For research data collection, enable the batch flag and follow Appendix C. Start with the small pilot before running the full study.
-- Use Appendix D for measured results and human-reviewed hypothesis coverage.
-- Export the V2 live trace JSON to inspect recorded outputs in the website's Visual Research Lab.
+## Quick start
 
-The fictional inputs and published paper figures are not our own measured Qwen results. No automatic hypothesis-quality or private-reasoning scores are claimed.
+- Run the four setup cells in A.
+- For live inference, enable RUN_QWEN and leave RUN_BATCH off.
+- Run the first research figure cell in B and press Start demonstration. The full demonstration uses six model calls; preview mode needs no model.
+- Run C and D for controlled research data and measured charts, after enabling batch mode.
+- E is an optional figure library. Do not run all cells just to demonstrate the project.
 
-The older practice and stress-test notebooks were superseded by V2 and removed from this branch. All future notebook updates belong in V2.
+Published figures and illustrative examples are not measured Qwen results. The combined showcase does not establish individual factor effects.
