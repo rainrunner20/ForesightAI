@@ -6,6 +6,12 @@ ForesightAI is a CSC 733 Natural Language Processing research prototype. We test
 
 > **Status — prototype, not a fact-checking service.** The web dashboard defaults to fictional examples and deterministic toy scores. It does **not** display measured LLM accuracy until you import a model-generated report. The Python runner can perform actual local inference using Ollama. No trained classifier, live social-media ingestion, or validated NetLogo integration is claimed as complete.
 
+## Official CSC 733 notebook
+
+[Open ForesightAI Research Lab V2 in Google Colab](https://colab.research.google.com/github/rainrunner20/ForesightAI/blob/feature/colab-narrative-pilot/notebooks/ForesightAI_Research_Lab_V2.ipynb)
+
+V2 is the sole maintained notebook. It lives on the Colab research branch; the older practice and stress-test notebooks have been removed.
+
 ## Why this is interesting
 
 When an organization asks an AI assistant to summarize a fast-moving discussion, social consensus and trustworthy source evidence are not the same thing. A rumor repeated by many accounts can look persuasive even without independent verification. We study that failure mode with paired, reproducible test conditions.
